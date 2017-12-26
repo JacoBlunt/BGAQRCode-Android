@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">ExWarehouse</string>
+    <string name="title_home">首页</string>
+    <string name="title_dashboard">出库</string>
+    <string name="title_notifications">帮助</string>
+    <string name="title_exit">退出</string>
+</resources>

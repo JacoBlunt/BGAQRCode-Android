@@ -1,0 +1,81 @@
+package com.jaco9.exwarehouse.bottomnavigationviewpager;
+
+import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
+import android.support.v4.app.Fragment;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+
+/**
+ * Created by bruce on 2016/11/1.
+ * BaseFragment
+ */
+
+public class BaseFragment extends Fragment {
+
+    public static final String KEY_INFO="info";
+//    public static BaseFragment newInstance(String info) {
+//        Bundle args = new Bundle();
+//        BaseFragment fragment = new BaseFragment();
+//        args.putString("info", info);
+//        fragment.setArguments(args);
+//        return fragment;
+//    }
+
+    public static BaseFragment newInstance(Integer info) {
+        Bundle args = new Bundle();
+        BaseFragment fragment = new BaseFragment();
+        args.putInt(KEY_INFO,info);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+//    @Nullable
+//    @Override
+//    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+//        View view = inflater.inflate(R.layout.fragment_base, null);
+//        TextView tvInfo = (TextView) view.findViewById(R.id.textView);
+//        tvInfo.setText(getArguments().getString("info"));
+//        tvInfo.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                Snackbar.make(v, "Don't click me.please!.", Snackbar.LENGTH_SHORT).show();
+//            }
+//        });
+//        return view;
+//    }
+
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        Integer fragmentIndex=getArguments().getInt(KEY_INFO);
+        View view =null;
+        switch (fragmentIndex) {
+            case 0:
+                view = inflater.inflate(R.layout.fragment_index, null);
+                break;
+            case 1:
+                view = inflater.inflate(R.layout.fragment_outwarehouse, null);
+                break;
+            case 2:
+                view = inflater.inflate(R.layout.fragment_help, null);
+                break;
+            default:
+                view = inflater.inflate(R.layout.fragment_index, null);
+
+        }
+//        View view = inflater.inflate(R.layout.fragment_base, null);
+//        TextView tvInfo = (TextView) view.findViewById(R.id.textView);
+//        tvInfo.setText(getArguments().getString("info"));
+//        tvInfo.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                Snackbar.make(v, "Don't click me.please!.", Snackbar.LENGTH_SHORT).show();
+//            }
+//        });
+        return view;
+    }
+}
