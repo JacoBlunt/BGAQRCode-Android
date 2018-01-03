@@ -1,11 +1,21 @@
 package com.jaco9.exwarehouse.bottomnavigationviewpager;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
+import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
+import android.widget.Toast;
+
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by bruce on 2016/11/1.
@@ -17,6 +27,9 @@ public class HomeActivity extends AppCompatActivity {
     private ViewPager viewPager;
     private MenuItem menuItem;
     private BottomNavigationView bottomNavigationView;
+    private Activity _this=this;
+    private List<Fragment> fragmentList=null;
+    private String barCodeContent=null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +75,10 @@ public class HomeActivity extends AppCompatActivity {
                 } else {
                     bottomNavigationView.getMenu().getItem(0).setChecked(false);
                 }
+                if (position==1)
+                {
+                    new IntentIntegrator(_this).initiateScan();
+                }
                 menuItem = bottomNavigationView.getMenu().getItem(position);
                 menuItem.setChecked(true);
             }
@@ -84,11 +101,35 @@ public class HomeActivity extends AppCompatActivity {
 
     private void setupViewPager(ViewPager viewPager) {
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
-
-        adapter.addFragment(BaseFragment.newInstance(0));
-        adapter.addFragment(BaseFragment.newInstance(1));
-        adapter.addFragment(BaseFragment.newInstance(2));
+        fragmentList=new ArrayList<>();
+        for (int i = 0; i <3 ; i++) {
+            Fragment fragment=BaseFragment.newInstance(i);
+            adapter.addFragment(fragment);
+            fragmentList.add(fragment);
+        }
 //        adapter.addFragment(BaseFragment.newInstance("更多"));
         viewPager.setAdapter(adapter);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+        if(result != null) {
+            if(result.getContents() == null) {
+                Toast.makeText(this, "Cancelled", Toast.LENGTH_LONG).show();
+            } else {
+                this.setBarCodeContent(result.getContents());
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
+    public String getBarCodeContent() {
+        return barCodeContent;
+    }
+
+    public void setBarCodeContent(String barCodeContent) {
+        this.barCodeContent = barCodeContent;
     }
 }
