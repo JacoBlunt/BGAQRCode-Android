@@ -18,7 +18,8 @@ public class SqlServerUtils {
 
     public static void init()
     {
-        String connStr="jdbc:sqlserver://192.168.123.200:50788;databaseName=warehouse";
+//        String connStr="jdbc:sqlserver://192.168.123.200:1433;databaseName=warehouse";
+        String connStr ="jdbc:jtds:sqlserver://192.168.123.200:1433/warehouse;charset=UTF-8;";
         String userName="sa";
         String userPsw="sa";
         SqlServerUtils.dbConnect(connStr,userName,userPsw);
@@ -28,7 +29,8 @@ public class SqlServerUtils {
     public static void dbConnect(String db_connect_string, String db_userid, String db_password) {
         if (conn==null) {
             try {
-                Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+//                Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+                Class.forName("net.sourceforge.jtds.jdbc.Driver");
                 conn = DriverManager.getConnection(db_connect_string, db_userid, db_password);
                 System.out.println("connected");//如果执行到此,说明连接成功
 //            return conn;
@@ -124,7 +126,8 @@ public class SqlServerUtils {
         String connStr="jdbc:sqlserver://127.0.0.1:50788;databaseName=warehouse";
         String userName="sa";
         String userPsw="sa";
-        SqlServerUtils.dbConnect(connStr,userName,userPsw);
+        SqlServerUtils.init();
+//        SqlServerUtils.dbConnect(connStr,userName,userPsw);
         String sql="select t.BatchNo from WarehouseIn t";
         ResultSet rs=SqlServerUtils.executeQuery(sql);
         try {

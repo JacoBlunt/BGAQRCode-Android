@@ -1,6 +1,7 @@
 package com.jaco9.exwarehouse.bottomnavigationviewpager;
 
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -29,6 +30,7 @@ public class BaseFragment extends Fragment {
 
     private static final String TAG = "BaseFragment";
     public static final String KEY_INFO="info";
+    public final BaseFragment _this=this;
 //    public static BaseFragment newInstance(String info) {
 //        Bundle args = new Bundle();
 //        BaseFragment fragment = new BaseFragment();
@@ -130,73 +132,126 @@ public class BaseFragment extends Fragment {
         {
             String scanResult=((HomeActivity)getActivity()).getBarCodeContent();
             Log.e(TAG, "fragment onResume! fragmentIndex=1 result="+scanResult);
+            TextView tvItemBarcode = (TextView) getView().findViewById(R.id.itemBarcode);
+            tvItemBarcode.setText(scanResult);
+            SqlRunner mTask = new SqlRunner();
+            mTask.execute(scanResult);
+        }
+        super.onResume();
+    }
 
+    class SqlRunner extends AsyncTask<String, Integer, String>
+    {
+
+        @Override
+        protected String doInBackground(String... strings) {
+            Log.i(TAG, "doInBackground(Params... params) called");
+            if (strings != null && strings.length == 1) {
+                String scanResult=strings[0];
 //            根据扫码结果去数据库查询 校验结果是否合法(有且只有一条)
-            if (StringUtils.isNotBlank(scanResult)&&scanResult.length()>=3) {
-                int length=scanResult.length();
-                String billNo=scanResult.substring(0, length-2);
-                String id=scanResult.substring(length-2, length);
-                Log.d(TAG,billNo+":"+id);
-                String sql="SELECT" +
-                        "t.ItemName," +
-                        "t.BatchNo," +
-                        "t.ReQty" +
-                        "FROM" +
-                        "WarehouseIn t" +
-                        "WHERE" +
-                        "t.BillNo = '"+billNo+"'" +
-                        "AND t.ID = "+id+"";
-                //                根据查询结果显示
-                String itemName=null;
-                String itemNo=null;
-                String itemBarcode=scanResult;
-                String itemStoreNum=null;
+                if (StringUtils.isNotBlank(scanResult) && scanResult.length() >= 3) {
+                    int length = scanResult.length();
+                    String billNo = scanResult.substring(0, length - 2);
+                    String id = scanResult.substring(length - 2, length);
+                    Log.d(TAG, billNo + ":" + id);
+                    String sql = " SELECT " +
+                            " t.ItemName, " +
+                            " t.BatchNo, " +
+                            " t.ReQty " +
+                            " FROM " +
+                            " WarehouseIn t " +
+                            " WHERE " +
+                            " t.BillNo = '" + billNo + "' " +
+                            " AND t.ID = " + id + " ";
+                    //                根据查询结果显示
+                    String itemName = null;
+                    String itemNo = null;
+                    String itemBarcode = scanResult;
+                    String itemStoreNum = null;
 //                String connStr="jdbc:sqlserver://127.0.0.1:50788;databaseName=warehouse";
 //                String userName="sa";
 //                String userPsw="sa";
-                SqlServerUtils.init();
+                    SqlServerUtils.init();
 //                String sql="select t.BatchNo from WarehouseIn t";
-                ResultSet rs=SqlServerUtils.executeQuery(sql);
-                int count=0;
-                try {
-                    rs.last();//移到最后一行
-                    count = rs.getRow();
-                    rs.beforeFirst();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-                if (count!=1)
-                {
-                    Log.e(TAG,"rs count error!");
-                    return;
-                }
-                try {
-                    while (rs.next()) {
-//                        System.out.println(rs.getString(1));
-                        itemName=rs.getString(1);
-                        itemNo=rs.getString(2);
-                        itemStoreNum=rs.getString(3);
-//                        View view=getActivity()
-                        TextView tvItemName = (TextView) getView().findViewById(R.id.itemName);
-                        tvItemName.setText(itemName);
-                        TextView tvItemNo = (TextView) getView().findViewById(R.id.itemNo);
-                        tvItemNo.setText(itemNo);
-                        TextView tvItemStoreNum = (TextView) getView().findViewById(R.id.storeNum);
-                        tvItemStoreNum.setText(itemStoreNum);
+                    ResultSet rs = SqlServerUtils.executeQuery(sql);
+                    int count = 0;
+                    if (rs == null) {
+                        Log.e(TAG,sql+" rs is null!");
+                        try {
+                            SqlServerUtils.releaseConn();
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                        }
+                        return null;
                     }
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-                rs=null;
-                try {
-                    SqlServerUtils.releaseConn();
-                } catch (SQLException e) {
-                    e.printStackTrace();
+                    try {
+                        rs.last();//移到最后一行
+                        count = rs.getRow();
+                        rs.beforeFirst();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                    if (count != 1) {
+                        Log.e(TAG, "rs count error!");
+                        rs = null;
+                        try {
+                            SqlServerUtils.releaseConn();
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                        }
+                        return null;
+                    }
+                    try {
+                        while (rs.next()) {
+//                        System.out.println(rs.getString(1));
+                            itemName = rs.getString(1);
+                            itemNo = rs.getString(2);
+                            itemStoreNum = rs.getString(3);
+////                        View view=getActivity()
+//                            TextView tvItemName = (TextView) getView().findViewById(R.id.itemName);
+//                            tvItemName.setText(itemName);
+//                            TextView tvItemNo = (TextView) getView().findViewById(R.id.itemNo);
+//                            tvItemNo.setText(itemNo);
+//                            TextView tvItemStoreNum = (TextView) getView().findViewById(R.id.storeNum);
+//                            tvItemStoreNum.setText(itemStoreNum);
+                        }
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                    rs = null;
+                    try {
+                        SqlServerUtils.releaseConn();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                    return itemName+":"+itemNo+":"+scanResult+":"+itemStoreNum;
                 }
             }
-
-
+            return null;
         }
-        super.onResume();
+
+        //onPostExecute方法用于在执行完后台任务后更新UI,显示结果
+        @Override
+        protected void onPostExecute(String result) {
+            Log.i(TAG, "onPostExecute(Result result) called");
+            if (StringUtils.isNotBlank(result)&&result.split(":").length==4)
+            {
+                String[] resultArray=result.split(":");
+                if (StringUtils.isNotBlank(resultArray[0])) {
+                    TextView tvItemName = (TextView) getView().findViewById(R.id.itemName);
+                    tvItemName.setText(resultArray[0]);
+                }
+                if (StringUtils.isNotBlank(resultArray[1])) {
+                    TextView tvItemNo = (TextView) getView().findViewById(R.id.itemNo);
+                    tvItemNo.setText(resultArray[1]);
+                }
+//                TextView tvItemStoreNum = (TextView) getView().findViewById(R.id.storeNum);
+//                tvItemStoreNum.setText(resultArray[3]);
+                if (StringUtils.isNotBlank(resultArray[3])) {
+                    TextView tvItemStoreNum = (TextView) getView().findViewById(R.id.storeNum);
+                    tvItemStoreNum.setText(resultArray[3]);
+                }
+            }
+        }
     }
 }

@@ -77,7 +77,14 @@ public class HomeActivity extends AppCompatActivity {
                 }
                 if (position==1)
                 {
-                    new IntentIntegrator(_this).initiateScan();
+                    IntentIntegrator integrator = new IntentIntegrator(_this);
+                    integrator.setDesiredBarcodeFormats(IntentIntegrator.ONE_D_CODE_TYPES);
+//                    integrator.setPrompt("Scan a barcode");
+                    integrator.setCameraId(0);  // Use a specific camera of the device
+//                    integrator.setBeepEnabled(false);
+                    integrator.setBarcodeImageEnabled(true);
+                    integrator.initiateScan();
+//                    new IntentIntegrator(_this).initiateScan();
                 }
                 menuItem = bottomNavigationView.getMenu().getItem(position);
                 menuItem.setChecked(true);
