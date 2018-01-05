@@ -19,9 +19,10 @@ public class SqlServerUtils {
     public static void init()
     {
 //        String connStr="jdbc:sqlserver://192.168.123.200:1433;databaseName=warehouse";
-        String connStr ="jdbc:jtds:sqlserver://192.168.123.200:1433/warehouse;charset=UTF-8;";
+//        String connStr ="jdbc:jtds:sqlserver://192.168.123.200:1433/warehouse;charset=UTF-8;";
+        String connStr ="jdbc:jtds:sqlserver://172.16.0.13:1433/FabricWare;charset=UTF-8;";
         String userName="sa";
-        String userPsw="sa";
+        String userPsw="changjianglu123";
         SqlServerUtils.dbConnect(connStr,userName,userPsw);
     }
 
@@ -53,12 +54,18 @@ public class SqlServerUtils {
         }
     }
 
-    public static void endTransaction()
+    public static void endTransaction(boolean isCommit)
     {
         try {
             if (conn!=null&&!conn.isClosed()) {
-
-                    conn.commit();
+                    if (isCommit)
+                    {
+                        conn.commit();
+                    }
+                    else
+                    {
+                        conn.rollback();
+                    }
                     conn.setAutoCommit(true);
 
             }
