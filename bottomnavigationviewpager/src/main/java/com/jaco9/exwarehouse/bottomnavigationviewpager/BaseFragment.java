@@ -209,7 +209,12 @@ public class BaseFragment extends Fragment {
 //                String connStr="jdbc:sqlserver://127.0.0.1:50788;databaseName=warehouse";
 //                String userName="sa";
 //                String userPsw="sa";
-                    SqlServerUtils.init();
+                  int intResult=  SqlServerUtils.init();
+                  if (intResult<=0)
+                  {
+                      Toast.makeText(_this.getActivity(), "600,获取对象出现问题!", Toast.LENGTH_LONG).show();
+                      return null;
+                  }
 //                String sql="select t.BatchNo from WarehouseIn t";
                     ResultSet rs = SqlServerUtils.executeQuery(sql);
                     int count = 0;
@@ -297,7 +302,7 @@ public class BaseFragment extends Fragment {
             }
             else
             {
-                Toast.makeText(_this.getActivity(), "数据库结果集错误,请检查!", Toast.LENGTH_LONG).show();
+                Toast.makeText(_this.getActivity(), "数据库结果集为空,请检查!", Toast.LENGTH_LONG).show();
             }
         }
     }
@@ -322,7 +327,12 @@ public class BaseFragment extends Fragment {
                     String insertSql = " insert into WarehouseOut(billno,id,outqty,buser,wdate)VALUES('"+strBillno+"',"+strId+","+strOutNum+",'手机',GETDATE())";
                     String updateSql="update WarehouseIn  set ReQty=ReQty-"+strOutNum+" where BillNo= '"+strBillno+"' and id="+strId+"";
 
-                    SqlServerUtils.init();
+                    int intResult=  SqlServerUtils.init();
+                    if (intResult<=0)
+                    {
+                        Toast.makeText(_this.getActivity(), "600,时间或者网络有问题!", Toast.LENGTH_LONG).show();
+                        return "600";
+                    }
                     SqlServerUtils.startTransaction();
                     int insResult=SqlServerUtils.executeUpdate(insertSql);
                     int updResult=SqlServerUtils.executeUpdate(updateSql);
@@ -342,7 +352,7 @@ public class BaseFragment extends Fragment {
                     return "400";
                 }
             }
-            return null;
+            return "500";
         }
 
         //onPostExecute方法用于在执行完后台任务后更新UI,显示结果
@@ -353,9 +363,13 @@ public class BaseFragment extends Fragment {
             {
                 Toast.makeText(_this.getActivity(), "出库成功!", Toast.LENGTH_LONG).show();
             }
+            else if (StringUtils.isNotBlank(result)&&result.equals("600"))
+            {
+                Toast.makeText(_this.getActivity(), "请检查重试,错误状态:"+result, Toast.LENGTH_LONG).show();
+            }
             else
             {
-                Toast.makeText(_this.getActivity(), "出库失败,请检查!", Toast.LENGTH_LONG).show();
+                Toast.makeText(_this.getActivity(), "出库失败,请检查!错误代码:"+result, Toast.LENGTH_LONG).show();
             }
         }
     }

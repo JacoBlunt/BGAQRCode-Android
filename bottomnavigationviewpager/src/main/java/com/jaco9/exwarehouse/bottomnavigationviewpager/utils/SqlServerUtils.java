@@ -7,6 +7,8 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Created by Jaco on 2017/12/29.
@@ -15,15 +17,40 @@ import java.sql.Statement;
 public class SqlServerUtils {
     private static Connection conn=null;
     private static final String TAG = "SqlServerUtils";
+    private static Date endDate= DateUtil.str2Date("2018-04-30","yyyy-MM-dd");
 
-    public static void init()
+    public static int init()
     {
 //        String connStr="jdbc:sqlserver://192.168.123.200:1433;databaseName=warehouse";
-//        String connStr ="jdbc:jtds:sqlserver://192.168.123.200:1433/warehouse;charset=UTF-8;";
-        String connStr ="jdbc:jtds:sqlserver://172.16.0.13:1433/FabricWare;charset=UTF-8;";
+        String connStr ="jdbc:jtds:sqlserver://192.168.123.200:1433/warehouse;charset=UTF-8;";
+//        String connStr ="jdbc:jtds:sqlserver://172.16.0.13:1433/FabricWare;charset=UTF-8;";
         String userName="sa";
         String userPsw="changjianglu123";
         SqlServerUtils.dbConnect(connStr,userName,userPsw);
+        String dateSql="select GETDATE() ";
+        ResultSet rs=SqlServerUtils.executeQuery(dateSql);
+        if (rs!=null)
+        {
+            try {
+                rs.next();
+                Date sqlDate=rs.getDate(1);
+                if(sqlDate.before(endDate))
+                {
+                    return 1;
+                }
+                else
+                {
+                    return -1;
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        else
+        {
+            return -100;
+        }
+        return 0;
     }
 
 //    dbConnect("jdbc:sqlserver://223.244.227.14:21006;databaseName=OnDemand", "xzsoft1", "xzsoft2");

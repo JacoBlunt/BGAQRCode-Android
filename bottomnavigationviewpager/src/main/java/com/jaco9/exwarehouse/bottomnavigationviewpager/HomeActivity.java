@@ -79,10 +79,11 @@ public class HomeActivity extends AppCompatActivity {
                 {
                     IntentIntegrator integrator = new IntentIntegrator(_this);
                     integrator.setDesiredBarcodeFormats(IntentIntegrator.ONE_D_CODE_TYPES);
-//                    integrator.setPrompt("Scan a barcode");
+                    integrator.setPrompt("请扫描条码");
                     integrator.setCameraId(0);  // Use a specific camera of the device
 //                    integrator.setBeepEnabled(false);
-                    integrator.setBarcodeImageEnabled(true);
+//                    integrator.setBarcodeImageEnabled(true);
+                    integrator.setOrientationLocked(true);
                     integrator.initiateScan();
 //                    new IntentIntegrator(_this).initiateScan();
                 }
