@@ -83,7 +83,7 @@ public class HomeActivity extends AppCompatActivity {
                     integrator.setCameraId(0);  // Use a specific camera of the device
 //                    integrator.setBeepEnabled(false);
 //                    integrator.setBarcodeImageEnabled(true);
-                    integrator.setOrientationLocked(true);
+                    integrator.setOrientationLocked(false);
                     integrator.initiateScan();
 //                    new IntentIntegrator(_this).initiateScan();
                 }

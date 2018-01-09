@@ -14,12 +14,14 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.jaco9.exwarehouse.bottomnavigationviewpager.utils.DateUtil;
 import com.jaco9.exwarehouse.bottomnavigationviewpager.utils.SqlServerUtils;
 
 import org.apache.commons.lang3.StringUtils;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Date;
 
 
 /**
@@ -84,20 +86,21 @@ public class BaseFragment extends Fragment {
 //                                点击按钮
 //                        重新查询数据库并检查数量是否合法
                         EditText editTextItemExNum= (EditText)getView().findViewById(R.id.itemExNum);
-                        TextView tvItemStoreNum = (TextView) getView().findViewById(R.id.storeNum);
+                        TextView tvItemStoreNum = (TextView) getView().findViewById(R.id.itemStoreNum);
 //                        TextView tvItemName = (TextView) getView().findViewById(R.id.itemName);
-                        TextView tvItemId = (TextView) getView().findViewById(R.id.itemId);
+                        //TextView tvItemId = (TextView) getView().findViewById(R.id.itemId);
                         TextView tvItemBarcode = (TextView) getView().findViewById(R.id.itemBarcode);
                         String strItemExNum=editTextItemExNum.getText().toString();
                         String strItemStoreNum=tvItemStoreNum.getText().toString();
                         String itemBarcode=tvItemBarcode.getText().toString();
-                        if (StringUtils.isBlank(itemBarcode) || itemBarcode.length() <= 3) {
+                        if (StringUtils.isBlank(itemBarcode) || itemBarcode.length() <= 5) {
                             Toast.makeText(_this.getActivity(), "条形码，billno，id有误,请重新扫描或者检查数据!", Toast.LENGTH_LONG).show();
                             return;
                         }
                         int length = itemBarcode.length();
-                        String itemBillNo = itemBarcode.substring(0, length - 2);
-                        String itemId = itemBarcode.substring(length - 2, length);
+                        //最后一位为校验位
+                        String itemBillNo = itemBarcode.substring(0, length - 3);
+                        String itemId = itemBarcode.substring(length - 3, length-1);
 //                        String itemBillNo=tvItemBarcode.getText().toString();
 //                        String itemId=tvItemId.getText().toString();
                         Float exNum=Float.parseFloat(strItemExNum);
@@ -169,6 +172,25 @@ public class BaseFragment extends Fragment {
             if (StringUtils.isNotBlank(scanResult)) {
                 TextView tvItemBarcode = (TextView) getView().findViewById(R.id.itemBarcode);
                 tvItemBarcode.setText(scanResult);
+                EditText etItemExNum=(EditText)getView().findViewById(R.id.itemExNum);
+                etItemExNum.setText("");
+                TextView tvItemName = (TextView) getView().findViewById(R.id.itemBatchNo);
+                tvItemName.setText("");
+                TextView tvItemNo = (TextView) getView().findViewById(R.id.itemSupplyName);
+                tvItemNo.setText("");
+                TextView tvItemId = (TextView) getView().findViewById(R.id.itemInDate);
+                tvItemId.setText("");
+                TextView tvItemDesc = (TextView) getView().findViewById(R.id.itemDesc);
+                tvItemDesc.setText("");
+                TextView tvItemSpec = (TextView) getView().findViewById(R.id.itemSpec);
+                tvItemSpec.setText("");
+                TextView tvItemLocation = (TextView) getView().findViewById(R.id.itemLocation);
+                tvItemLocation.setText("");
+                TextView tvItemStoreNum = (TextView) getView().findViewById(R.id.itemStoreNum);
+                tvItemStoreNum.setText("");
+
+
+
                 QueryScanRunner mTask = new QueryScanRunner();
                 mTask.execute(scanResult);
             }
@@ -176,36 +198,33 @@ public class BaseFragment extends Fragment {
         super.onResume();
     }
 
-    class QueryScanRunner extends AsyncTask<String, Integer, String>
+    class QueryScanRunner extends AsyncTask<String, Integer, WarehouseStoreVO>
     {
 
         @Override
-        protected String doInBackground(String... strings) {
+        protected WarehouseStoreVO doInBackground(String... strings) {
             Log.i(TAG, "QueryScanRunner doInBackground(Params... params) called");
+            WarehouseStoreVO warehouseStoreVO=new WarehouseStoreVO();
             if (strings != null && strings.length == 1) {
                 String scanResult=strings[0];
 //            根据扫码结果去数据库查询 校验结果是否合法(有且只有一条)
-                if (StringUtils.isNotBlank(scanResult) && scanResult.length() >= 3) {
+                if (StringUtils.isNotBlank(scanResult) && scanResult.length() >= 5) {
                     int length = scanResult.length();
-                    String billNo = scanResult.substring(0, length - 2);
-                    String id = scanResult.substring(length - 2, length);
+                    String billNo = scanResult.substring(0, length - 3);
+                    String id = scanResult.substring(length - 3, length-1);
                     Log.d(TAG, billNo + ":" + id);
-                    String sql = " SELECT " +
-                            " t.ItemName, " +
-                            " t.BatchNo, " +
-                            "  t.id, " +
-                            " t.ReQty " +
-                            " FROM " +
-                            " WarehouseIn t " +
-                            " WHERE " +
-                            " t.BillNo = '" + billNo + "' " +
-                            " AND t.ID = " + id + " ";
-                    //                根据查询结果显示
-                    String itemName = null;
-                    String itemNo = null;
-                    String itemId = null;
+                    String sql = "SELECT t.BatchNo, t.SupplyName, t.Wdate, t.Description, t.spec, t.Location, t.ReQty FROM WarehouseIn t " +
+                            " WHERE  t.BillNo = '" + billNo + "' AND t.ID = " + id + " ";
+                    //根据查询结果显示
+                    String itemBatchNo = null;
+                    String itemSupplyName = null;
+                    Date itemInDate = null;
+                    String itemDesc = null;
+                    String itemSpec = null;
+                    String itemLocation = null;
+                    Float itemStoreNum = null;
                     String itemBarcode = scanResult;
-                    String itemStoreNum = null;
+
 //                String connStr="jdbc:sqlserver://127.0.0.1:50788;databaseName=warehouse";
 //                String userName="sa";
 //                String userPsw="sa";
@@ -247,10 +266,30 @@ public class BaseFragment extends Fragment {
                     try {
                         while (rs.next()) {
 //                        System.out.println(rs.getString(1));
-                            itemName = rs.getString(1);
-                            itemNo = rs.getString(2);
-                            itemId = rs.getString(3);
-                            itemStoreNum = rs.getString(4);
+//                            String itemBatchNo = null;
+//                            String itemSupplyName = null;
+//                            Date itemInDate = null;
+//                            String itemDesc = null;
+//                            String itemSpec = null;
+//                            String itemLocation = null;
+//                            String itemStoreNum = null;
+
+                            itemBatchNo = rs.getString(1);
+                            itemSupplyName = rs.getString(2);
+                            itemInDate = rs.getDate(3);
+                            itemDesc = rs.getString(4);
+                            itemSpec = rs.getString(5);
+                            itemLocation = rs.getString(6);
+                            itemStoreNum = rs.getFloat(7);
+
+                            warehouseStoreVO.setItemBatchNo(itemBatchNo);
+                            warehouseStoreVO.setItemSupplyName(itemSupplyName);
+                            warehouseStoreVO.setItemInDate(itemInDate);
+                            warehouseStoreVO.setItemDesc(itemDesc);
+                            warehouseStoreVO.setItemSpec(itemSpec);
+                            warehouseStoreVO.setItemLocation(itemLocation);
+                            warehouseStoreVO.setItemStoreNum(itemStoreNum);
+                            warehouseStoreVO.setItemBarcode(itemBarcode);
 ////                        View view=getActivity()
 //                            TextView tvItemName = (TextView) getView().findViewById(R.id.itemName);
 //                            tvItemName.setText(itemName);
@@ -268,7 +307,7 @@ public class BaseFragment extends Fragment {
                     } catch (SQLException e) {
                         e.printStackTrace();
                     }
-                    return itemName+":"+itemNo+":"+itemId+":"+scanResult+":"+itemStoreNum;
+                    return warehouseStoreVO;
                 }
             }
             return null;
@@ -276,28 +315,51 @@ public class BaseFragment extends Fragment {
 
         //onPostExecute方法用于在执行完后台任务后更新UI,显示结果
         @Override
-        protected void onPostExecute(String result) {
+        protected void onPostExecute(WarehouseStoreVO result) {
             Log.i(TAG, "QueryScanRunner onPostExecute(Result result) called");
-            if (StringUtils.isNotBlank(result)&&result.split(":").length==5)
+            if (result!=null&&StringUtils.isNotBlank(result.getItemBarcode())&&StringUtils.isNotBlank(result.getItemBatchNo()))
             {
-                String[] resultArray=result.split(":");
-                if (StringUtils.isNotBlank(resultArray[0])) {
-                    TextView tvItemName = (TextView) getView().findViewById(R.id.itemName);
-                    tvItemName.setText(resultArray[0]);
+                String itemBatchNo = result.getItemBatchNo();
+                String itemSupplyName = result.getItemSupplyName();
+                Date dItemInDate = result.getItemInDate();
+                String itemInDate= DateUtil.date2String(dItemInDate,"yyyy-MM-dd HH:mm:ss");
+                String itemDesc = result.getItemDesc();
+                String itemSpec = result.getItemSpec();
+                String itemLocation = result.getItemLocation();
+                Float itemStoreNum = result.getItemStoreNum();
+                String itemBarcode=result.getItemBarcode();
+                if (StringUtils.isNotBlank(itemBatchNo)) {
+                    TextView tvItemBatchNo = (TextView) getView().findViewById(R.id.itemBatchNo);
+                    tvItemBatchNo.setText(itemBatchNo);
                 }
-                if (StringUtils.isNotBlank(resultArray[1])) {
-                    TextView tvItemNo = (TextView) getView().findViewById(R.id.itemNo);
-                    tvItemNo.setText(resultArray[1]);
+                if (StringUtils.isNotBlank(itemSupplyName)) {
+                    TextView tvItemSupplyName = (TextView) getView().findViewById(R.id.itemSupplyName);
+                    tvItemSupplyName.setText(itemSupplyName);
                 }
-                if (StringUtils.isNotBlank(resultArray[2])) {
-                    TextView tvItemId = (TextView) getView().findViewById(R.id.itemId);
-                    tvItemId.setText(resultArray[2]);
+                if (StringUtils.isNotBlank(itemInDate)) {
+                    TextView tvItemInDate = (TextView) getView().findViewById(R.id.itemInDate);
+                    tvItemInDate.setText(itemInDate);
                 }
-//                TextView tvItemStoreNum = (TextView) getView().findViewById(R.id.storeNum);
-//                tvItemStoreNum.setText(resultArray[3]);
-                if (StringUtils.isNotBlank(resultArray[4])) {
-                    TextView tvItemStoreNum = (TextView) getView().findViewById(R.id.storeNum);
-                    tvItemStoreNum.setText(resultArray[4]);
+                if (StringUtils.isNotBlank(itemDesc)) {
+                    TextView tvItemDesc = (TextView) getView().findViewById(R.id.itemDesc);
+                    tvItemDesc.setText(itemDesc);
+                }
+                if (StringUtils.isNotBlank(itemSpec)) {
+                    TextView tvItemSpec = (TextView) getView().findViewById(R.id.itemSpec);
+                    tvItemSpec.setText(itemSpec);
+                }
+                if (StringUtils.isNotBlank(itemLocation)) {
+                    TextView tvItemLocation = (TextView) getView().findViewById(R.id.itemLocation);
+                    tvItemLocation.setText(itemLocation);
+                }
+
+                if (itemStoreNum!=null&&itemStoreNum.floatValue()>=0) {
+                    TextView tvItemStoreNum = (TextView) getView().findViewById(R.id.itemStoreNum);
+                    tvItemStoreNum.setText(itemStoreNum.toString());
+                }
+                if (StringUtils.isNotBlank(itemBarcode)) {
+                    TextView tvItemBarcode = (TextView) getView().findViewById(R.id.itemBarcode);
+                    tvItemBarcode.setText(itemBarcode);
                 }
             }
             else
@@ -371,6 +433,82 @@ public class BaseFragment extends Fragment {
             {
                 Toast.makeText(_this.getActivity(), "出库失败,请检查!错误代码:"+result, Toast.LENGTH_LONG).show();
             }
+        }
+    }
+
+    class WarehouseStoreVO
+    {
+        private String itemBatchNo = null;
+        private String itemSupplyName = null;
+        private Date itemInDate = null;
+        private String itemDesc = null;
+        private String itemSpec = null;
+        private String itemLocation = null;
+        private Float itemStoreNum = null;
+        private String itemBarcode = null;
+
+        public String getItemBatchNo() {
+            return itemBatchNo;
+        }
+
+        public void setItemBatchNo(String itemBatchNo) {
+            this.itemBatchNo = itemBatchNo;
+        }
+
+        public String getItemSupplyName() {
+            return itemSupplyName;
+        }
+
+        public void setItemSupplyName(String itemSupplyName) {
+            this.itemSupplyName = itemSupplyName;
+        }
+
+        public Date getItemInDate() {
+            return itemInDate;
+        }
+
+        public void setItemInDate(Date itemInDate) {
+            this.itemInDate = itemInDate;
+        }
+
+        public String getItemDesc() {
+            return itemDesc;
+        }
+
+        public void setItemDesc(String itemDesc) {
+            this.itemDesc = itemDesc;
+        }
+
+        public String getItemSpec() {
+            return itemSpec;
+        }
+
+        public void setItemSpec(String itemSpec) {
+            this.itemSpec = itemSpec;
+        }
+
+        public String getItemLocation() {
+            return itemLocation;
+        }
+
+        public void setItemLocation(String itemLocation) {
+            this.itemLocation = itemLocation;
+        }
+
+        public Float getItemStoreNum() {
+            return itemStoreNum;
+        }
+
+        public void setItemStoreNum(Float itemStoreNum) {
+            this.itemStoreNum = itemStoreNum;
+        }
+
+        public String getItemBarcode() {
+            return itemBarcode;
+        }
+
+        public void setItemBarcode(String itemBarcode) {
+            this.itemBarcode = itemBarcode;
         }
     }
 }

@@ -17,15 +17,19 @@ import java.util.Date;
 public class SqlServerUtils {
     private static Connection conn=null;
     private static final String TAG = "SqlServerUtils";
-    private static Date endDate= DateUtil.str2Date("2018-04-30","yyyy-MM-dd");
+//    检查证书到期日期
+    private static Date endDate= DateUtil.str2Date("2043-01-01","yyyy-MM-dd");
 
     public static int init()
     {
-//        String connStr="jdbc:sqlserver://192.168.123.200:1433;databaseName=warehouse";
-        String connStr ="jdbc:jtds:sqlserver://192.168.123.200:1433/warehouse;charset=UTF-8;";
-//        String connStr ="jdbc:jtds:sqlserver://172.16.0.13:1433/FabricWare;charset=UTF-8;";
+//================publish config======================
+        String connStr ="jdbc:jtds:sqlserver://172.16.0.13:1433/FabricWare;charset=UTF-8;";
         String userName="sa";
         String userPsw="changjianglu123";
+//        =============local test===================
+//        String connStr ="jdbc:jtds:sqlserver://192.168.123.200:1433/warehouse;charset=UTF-8;";
+//        String userName="sa";
+//        String userPsw="sa";
         SqlServerUtils.dbConnect(connStr,userName,userPsw);
         String dateSql="select GETDATE() ";
         ResultSet rs=SqlServerUtils.executeQuery(dateSql);
