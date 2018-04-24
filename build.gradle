@@ -16,7 +16,6 @@ allprojects {
     repositories {
         jcenter()
         google()
-	3333()
     }
 
     tasks.withType(JavaCompile){
@@ -27,7 +26,6 @@ allprojects {
         if (task.name.contains('Test')) {
             task.enabled = false
         }
-	3333()
     }
 }
 
