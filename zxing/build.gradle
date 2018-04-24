@@ -2,7 +2,6 @@ apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion ANDROID_BUILD_SDK_VERSION as int
-    buildToolsVersion ANDROID_BUILD_TOOLS_VERSION
 
     defaultConfig {
         minSdkVersion ANDROID_BUILD_MIN_SDK_VERSION as int
@@ -11,9 +10,15 @@ android {
 }
 
 dependencies {
-    provided 'com.google.zxing:core:3.3.0'
-    compile project(':qrcodecore')
+    compile 'com.google.zxing:core:3.3.1'
+    if(hasProperty("publishAar")) {
+        compile "cn.bingoogolapple:bga-qrcode-core:${VERSION_NAME}"
+    } else {
+        api project(':qrcodecore')
+    }
 }
 
-// gradle uploadArchives
-//apply from: 'https://raw.githubusercontent.com/bingoogolapple/PublishAar/master/central-publish.gradle'
+// gradle clean build bintrayUpload -PpublishAar
+if (hasProperty("publishAar")) {
+    apply from: 'https://raw.githubusercontent.com/bingoogolapple/PublishAar/master/jcenter-release.gradle'
+}
