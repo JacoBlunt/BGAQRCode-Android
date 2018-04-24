@@ -16,7 +16,7 @@ allprojects {
     repositories {
         jcenter()
         google()
-<<<<<<< HEAD
+       3333();
     }
 
     tasks.withType(JavaCompile){
@@ -27,8 +27,7 @@ allprojects {
         if (task.name.contains('Test')) {
             task.enabled = false
         }
-=======
->>>>>>> upstream/master
+        3333();
     }
 }
 
